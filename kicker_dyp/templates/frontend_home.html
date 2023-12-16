@@ -35,17 +35,21 @@
 
           <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
             <thead>
-            <tr>
+            <tr class="is-size-7"">
                 <th class="has-text-centered">Platz</th>
                 <th>Name</th>
                 <th class="has-text-centered">Teilnahmen</th>
                 <th class="has-text-centered">Punkte</th>
                 <th class="has-text-centered">Durchschnitt</th>
+                <th class="has-text-centered">1.</th>
+                <th class="has-text-centered">2.</th>
+                <th class="has-text-centered">3.</th>
+                <th class="has-text-centered">4.</th>
             </tr>
             </thead>
             <tbody>
                 {% for result in results %}
-                <tr>
+                <tr class="is-size-7">
                     {% if loop.index <=16 %}
                         <td class="has-text-centered qualified">{{ loop.index }}</td>
                     {% else %}
@@ -56,6 +60,10 @@
                     <td class="has-text-centered">{{ '%.2f' | format(result.points_total|float)|replace('.', ',') }}</td>
                     {% set average = result.points_total / result.attendances %}
                     <td class="has-text-centered">{{ '%.2f' | format(average|float)|replace('.', ',') }}</td>
+                    <td class="has-text-centered">{{ result.first_place }}</td>
+                    <td class="has-text-centered">{{ result.second_place }}</td>
+                    <td class="has-text-centered">{{ result.third_place }}</td>
+                    <td class="has-text-centered">{{ result.fourth_place }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -1,6 +1,6 @@
 from ast import stmt
 from itertools import groupby
-from sqlalchemy import distinct, select, func
+from sqlalchemy import distinct, select, func, case, literal_column
 from kicker_dyp.models import Settings, Player, Score, players_scores
 from kicker_dyp import db
 
@@ -60,7 +60,31 @@ def read_standings(match_day):
     stmt = select(
         Player, Score,
         func.sum(Score.score_today).label('points_total'),
-        func.count(Score.score_today).label('attendances')
+        func.count(Score.score_today).label('attendances'),
+        func.count(case(
+            (
+                Score.place_today == 1,
+                literal_column("'greaterthan1'")
+            )
+        )).label('first_place'),
+        func.count(case(
+            (
+                Score.place_today == 2,
+                literal_column("'greaterthan2'")
+            )
+        )).label('second_place'),
+        func.count(case(
+            (
+                Score.place_today == 3,
+                literal_column("'greaterthan3'")
+            )
+        )).label('third_place'),
+        func.count(case(
+            (
+                Score.place_today == 4,
+                literal_column("'greaterthan4'")
+            )
+        )).label('fourth_place')
     ).join(
         Player.scores
     ).where(
