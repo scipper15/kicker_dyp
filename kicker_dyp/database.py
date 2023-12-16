@@ -1,5 +1,3 @@
-from ast import stmt
-from itertools import groupby
 from sqlalchemy import distinct, select, func, case, literal_column
 from kicker_dyp.models import Settings, Player, Score, players_scores
 from kicker_dyp import db
