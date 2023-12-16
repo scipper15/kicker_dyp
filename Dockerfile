@@ -192,6 +192,3 @@ RUN chmod 644 ./kicker_dyp/prod.db
 
 # expose port
 EXPOSE 8000
-
-# start production server
-CMD ["gunicorn", "-w", "4", "--forwarded-allow-ips=172.23.0.6", "kicker_dyp:create_app('prod')"]
