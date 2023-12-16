@@ -183,12 +183,12 @@ RUN pip install -r ./requirements.txt --upgrade pip
 COPY . ./
 
 # initialize database
-RUN flask init-db
+RUN flask --app "kicker_dyp:create_app('prod')" init-db
 
 # altering owner and permissions
-RUN chown www-data ./kicker_dyp/kicker_dyp/prod.db
-RUN chgrp www-data ./kicker_dyp/kicker_dyp/prod.db
-RUN chmod 644 ./kicker_dyp/kicker_dyp/prod.db
+RUN chown www-data ./kicker_dyp/prod.db
+RUN chgrp www-data ./kicker_dyp/prod.db
+RUN chmod 644 ./kicker_dyp/prod.db
 
 # expose port
 EXPOSE 8000
