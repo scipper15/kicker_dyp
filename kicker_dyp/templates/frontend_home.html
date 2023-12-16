@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+
+        <h1 class="title is-size-4 has-text-centered">Rangliste - Stand nach {{ match_day }} von {{ match_days }} Spieltagen</h1>
+        <h2 class="subtitle is-size-5 has-text-centered">DYP-Serie {{ dyp_season }} vom {{ dyp_start|strftime_date() }} bis {{ dyp_end|strftime_date() }}</h2>
+
+        {% if match_days %}
+        <section>
+        <div class="mb-3 dropdown is-hoverable">
+            <div class="dropdown-trigger">
+              <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
+                <span>Spieltag wählen</span>
+                <span class="icon is-small">
+                  <i class="fas fa-angle-down" aria-hidden="true"></i>
+                </span>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+                <div class="dropdown-content">
+                        {% for _, dyp_date in zip(range(match_days), dyp_dates) %}
+                        <div class="dropdown-item">
+                            <a href="{{ url_for('home.index', match_day=loop.index) }}"><p>Stand nach Spieltag {{ loop.index }} ({{ dyp_date[0]|strftime_date }})</p></a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+            {% endif %}
+
+          <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+            <thead>
+            <tr>
+                <th class="has-text-centered">Platz</th>
+                <th>Name</th>
+                <th class="has-text-centered">Teilnahmen</th>
+                <th class="has-text-centered">Punkte</th>
+                <th class="has-text-centered">Durchschnitt</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    {% if loop.index <=16 %}
+                        <td class="has-text-centered qualified">{{ loop.index }}</td>
+                    {% else %}
+                        <td class="has-text-centered">{{ loop.index }}</td>
+                    {% endif %}
+                    <td>{{ result.Player.full_name }}</td>
+                    <td class="has-text-centered">{{ result.attendances }}</td>
+                    <td class="has-text-centered">{{ '%.2f' | format(result.points_total|float)|replace('.', ',') }}</td>
+                    {% set average = result.points_total / result.attendances %}
+                    <td class="has-text-centered">{{ '%.2f' | format(average|float)|replace('.', ',') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</section>
+<section>
+    <div class="box content">
+        <span class="tag is-primary">Jackpot: {{ jackpot }} €</span>
+    </div>
+    <div class="box content is-small">
+        <p><strong>Punktevergabe:</strong></p>
+        <ul>
+            <li>Punkte werden dynamisch errechnet, wobei die maximale Punktzahl von der Gesamtanzahl der Teilnehmer abhängt.</li>
+            <li>Die beiden Erstplatzierten des Final-Profifeldes erhalten die maximale Punktzahl.</li>
+            <li>Die Letztplatzierten des Final-Amateurfeldes sowie diejenigen, die nur an der Qualifizierungsrunde teilgenommen haben, erhalten jeweils 10 Punkte (für die Teilnahme).</li>
+            <li>Die Punktedifferenz zwischen jeweils benachbarten Plätzen ist - <strong>innerhalb</strong> einer DYP-Veranstaltung - gleich. Gleichplatzierte erhalten je gleich viele Punkte.</li>
+
+            <li>Jede bessere Platzierung erhält stufenweise mehr Punkte (10 + x Punkte).</li>
+            <li><strong>Beispiel: </strong></li>
+            <ul>
+                <li>Bei 20 Teilnehmern ist die Punktstufe für jeden besseren Platz beispielsweise 2,44.</li>
+                <li>Der Letztplatzierte erhält 10 Punkte für die Teilnahme.</li>
+                <li>Der Vorletzte erhält 10 Punkte + 2,44 Punkte.</li>
+                <li>Der Drittletzte erhält 12,44 Punkte + 2,44 Punkte. Etc.</li>
+            </ul>
+        </ul>
+    </div>
+    <span class="tag is-white">Stand: {{ last_updated|strftime_timestamp }}</span>
+</section>
+{% endblock %}

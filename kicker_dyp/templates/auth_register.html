@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+    <h1 class="title">Register</h1>
+    {% for field, errors in form.errors.items() %}
+    <div class="notification is-primary">
+        {{ form[field].label }}: {{ ', '.join(errors) }}
+    </div>
+    {% endfor %}
+    <form method="post" action="{{ url_for('auth.register') }}">
+        {{ form.csrf_token }}
+        <div class="field">
+            {{ form.username.label }}
+            <div class="control">
+                {{ form.username(class="input") }}
+            </div>
+        <div class="field">
+            {{ form.password.label }}
+            <div class="control">
+                {{ form.password(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            {{ form.confirm_password.label }}
+            <div class="control">
+                {{ form.confirm_password(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                {{ form.submit(class="button is-primary") }}
+            </div>
+        </div>
+    </form>
+{% endblock %}

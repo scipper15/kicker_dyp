@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Settibgs{% endblock %}
+
+{% block content %}
+    <h1 class="title">Settings</h1>
+    {% for field, errors in form.errors.items() %}
+       <div class="notification is-primary">
+            {{ form[field].label }}: {{ ', '.join(errors) }}
+        </div>
+    {% endfor %}
+    <form method="post" action="{{ url_for('admin.settings') }}">
+        {{ form.hidden_tag() }}
+        <div class="field">
+            {{ form.dyp_year.label }}
+            <div class="control">
+                {{ form.dyp_year(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            {{ form.dyp_season.label }}
+            <div class="control">
+                {{ form.dyp_season(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            {{ form.dyp_start.label }}
+            <div class="control">
+                {{ form.dyp_start(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            {{ form.dyp_end.label }}
+            <div class="control">
+                {{ form.dyp_end(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                {{ form.submit(class="button is-primary") }}
+            </div>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Revert Standings{% endblock %}
+
+{% block content %}
+    <h1 class="title">Revert Standings</h1>
+    {% for field, errors in form.errors.items() %}
+       <div class="notification is-primary">
+            {{ form[field].label }}: {{ ', '.join(errors) }}
+        </div>
+    {% endfor %}
+    <form method="post" action="{{ url_for('admin.revert') }}">
+        {{ form.hidden_tag() }}
+        <div class="field">
+            {{ form.match_day.label }}
+            <div class="control">
+                {{ form.match_day(class="input") }}
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                {{ form.submit(class="button is-primary") }}
+            </div>
+        </div>
+    </form>
+{% endblock %}

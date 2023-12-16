@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Home{% endblock %}
+
+{% block content %}
+<h1 class="title">Admin Home</h1>
+<p class="has-text-centered">
+    <a class="button is-primary" href="{{ url_for('home.index') }}">Show Table</a>
+    <a class="button is-primary" href="{{ url_for('admin.upload') }}">Upload Results</a>
+    <a class="button is-primary" href="{{ url_for('admin.settings') }}">Show Settings</a>
+    <a class="button is-primary" href="{{ url_for('admin.revert') }}">Revert Standings</a>
+    <a class="button is-primary" href="{{ url_for('auth.logout') }}">Logout</a>
+</p>
+{% endblock %}

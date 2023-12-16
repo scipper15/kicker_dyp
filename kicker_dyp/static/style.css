@@ -1,0 +1,12 @@
+.qualified {
+    background-color: #e7fce7;
+}
+#ranking th {
+    background-color: #808080;
+    color: #fff
+}
+
+@media screen and (max-width: 480px) {
+	#ranking th, #ranking td { padding: 0.2em 0.1em; }
+	#ranking th {writing-mode: vertical-lr;vertical-align: bottom;}
+}
