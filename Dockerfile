@@ -168,6 +168,11 @@ RUN set -eux; \
 	\
 	pip --version
 
+# add and change user
+RUN groupadd -g 999 appuser && \
+    useradd -r -u 999 -g appuser appuser
+USER appuser
+
 # copy source code
 WORKDIR /app
 COPY ./requirements.txt ./
