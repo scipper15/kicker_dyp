@@ -139,8 +139,8 @@ def get_last_updated():
     return last_updated
 
 
-def calc_jackpot():
-    jackpot = db.session.query(func.count(Score.id)).scalar()
+def calc_jackpot(match_day):
+    jackpot = db.session.query(func.count(Score.id)).where(Score.match_day <= match_day).scalar()
     return jackpot
 
 

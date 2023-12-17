@@ -21,7 +21,7 @@ def index(match_day):
         dyp_end = settings.dyp_end
         last_updated = get_last_updated()
         match_days = get_last_match_day()
-        jackpot = calc_jackpot()
+        jackpot = calc_jackpot(match_day)
         dyp_dates = get_dyp_dates()
         return render_template('frontend_home.html',
                                results=results,
