@@ -179,16 +179,16 @@ RUN . venv/bin/activate
 # install dependencies
 RUN pip install -r ./requirements.txt --upgrade pip
 
+# add and change user
+RUN groupadd -g 999 appuser && \
+    useradd -r -u 999 -g appuser appuser
+USER appuser
+
 # copy source code
 COPY . ./
 
 # initialize database
-RUN flask --app "kicker_dyp:create_app('prod')" init-db
-
-# altering owner and permissions
-RUN chown www-data ./kicker_dyp/prod.db
-RUN chgrp www-data ./kicker_dyp/prod.db
-RUN chmod 644 ./kicker_dyp/prod.db
+# RUN flask --app "kicker_dyp:create_app('prod')" init-db
 
 # expose port
 EXPOSE 8000
