@@ -11,36 +11,37 @@
 
         {% if match_days %}
         <section>
-        <div class="mb-3 dropdown is-hoverable">
-            <div class="dropdown-trigger">
-              <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
-                <span>Spieltag wählen</span>
-                <span class="icon is-small">
-                  <i class="fas fa-angle-down" aria-hidden="true"></i>
-                </span>
-              </button>
-            </div>
-            <div class="dropdown-menu" id="dropdown-menu4" role="menu">
-                <div class="dropdown-content">
-                        {% for _, dyp_date in zip(range(match_days), dyp_dates) %}
-                        <div class="dropdown-item">
-                            <a href="{{ url_for('home.index', match_day=loop.index) }}"><p>Stand nach Spieltag {{ loop.index }} ({{ dyp_date[0]|strftime_date }})</p></a>
-                        </div>
-                        {% endfor %}
-                    </div>
+            <div class="mb-3 dropdown is-hoverable">
+                <div class="dropdown-trigger">
+                <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
+                    <span>Spieltag wählen</span>
+                    <span class="icon is-small">
+                    <i class="fas fa-angle-down" aria-hidden="true"></i>
+                    </span>
+                </button>
                 </div>
+                <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+                    <div class="dropdown-content">
+                            {% for _, dyp_date in zip(range(match_days), dyp_dates) %}
+                            <div class="dropdown-item">
+                                <a href="{{ url_for('home.index', match_day=loop.index) }}"><p>Stand nach Spieltag {{ loop.index }} ({{ dyp_date[0]|strftime_date }})</p></a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
             </div>
         </section>
             {% endif %}
 
-          <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+        <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
             <thead>
-            <tr class="is-size-7"">
+            <tr class="is-size-7">
                 <th class="has-text-centered">Platz</th>
                 <th>Name</th>
                 <th class="has-text-centered">Teilnahmen</th>
                 <th class="has-text-centered">Punkte</th>
-                <th class="has-text-centered">Durchschnitt</th>
+                <th class="has-text-centered"><i class="fa-solid fa-chart-line"></i></th>
+                <th class="has-text-centered">Ø</th>
                 <th class="has-text-centered">1.</th>
                 <th class="has-text-centered">2.</th>
                 <th class="has-text-centered">3.</th>
@@ -48,22 +49,37 @@
             </tr>
             </thead>
             <tbody>
-                {% for result in results %}
+                {% for standing in standings %}
                 <tr class="is-size-7">
-                    {% if loop.index <=16 %}
-                        <td class="has-text-centered qualified">{{ loop.index }}</td>
+                    {% if standing.rank <= 16 %}
+                        <td class="has-text-centered qualified">{{ standing.rank }}</td>
                     {% else %}
-                        <td class="has-text-centered">{{ loop.index }}</td>
+                        <td class="has-text-centered">{{ standing.rank }}</td>
                     {% endif %}
-                    <td>{{ result.Player.full_name }}</td>
-                    <td class="has-text-centered">{{ result.attendances }}</td>
-                    <td class="has-text-centered">{{ '%.2f' | format(result.points_total|float)|replace('.', ',') }}</td>
-                    {% set average = result.points_total / result.attendances %}
+                    <td>{{ standing.Player.full_name }}</td>
+                    <td class="has-text-centered">{{ standing.attendances }}</td>
+                    <td class="has-text-centered">{{ '%.2f' | format(standing.points_total|float)|replace('.', ',') }}</td>
+                    {% set average = standing.points_total / standing.attendances %}
+                    {% if standing.already_played %}
+                        {% for rank_before in ranks_before %}
+                            {% if rank_before.Player.id == standing.Player.id %}
+                                {% if rank_before.rank_last_day > standing.rank %}
+                                    <td class="has-text-centered"><i class="fa-solid fa-arrow-trend-up"></i></td>
+                                {% elif rank_before.rank_last_day < standing.rank %}
+                                    <td class="has-text-centered"><i class="fa-solid fa-arrow-trend-down"></i></td>
+                                {% elif rank_before.rank_last_day == standing.rank %}
+                                    <td class="has-text-centered"><i class="fa-solid fa-plus-minus"></i></td>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <td class="has-text-centered"><i class="fa-solid fa-user-plus"></i></td>
+                    {% endif %}
                     <td class="has-text-centered">{{ '%.2f' | format(average|float)|replace('.', ',') }}</td>
-                    <td class="has-text-centered">{{ result.first_place }}</td>
-                    <td class="has-text-centered">{{ result.second_place }}</td>
-                    <td class="has-text-centered">{{ result.third_place }}</td>
-                    <td class="has-text-centered">{{ result.fourth_place }}</td>
+                    <td class="has-text-centered">{{ standing.first_place }}</td>
+                    <td class="has-text-centered">{{ standing.second_place }}</td>
+                    <td class="has-text-centered">{{ standing.third_place }}</td>
+                    <td class="has-text-centered">{{ standing.fourth_place }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -72,9 +88,10 @@
     </div>
 </section>
 <section>
-    <div class="box content">
+    <div class="box content columns has-text-centered is-size-7">
         <span class="tag is-primary">Jackpot: {{ jackpot }} €</span>
     </div>
+
     <div class="box content is-small">
         <p><strong>Punktevergabe:</strong></p>
         <ul>

@@ -62,27 +62,36 @@ def read_standings(match_day):
         func.count(case(
             (
                 Score.place_today == 1,
-                literal_column("'greaterthan1'")
+                literal_column("'equals1'")
             )
         )).label('first_place'),
         func.count(case(
             (
                 Score.place_today == 2,
-                literal_column("'greaterthan2'")
+                literal_column("'equals2'")
             )
         )).label('second_place'),
         func.count(case(
             (
                 Score.place_today == 3,
-                literal_column("'greaterthan3'")
+                literal_column("'equals3'")
             )
         )).label('third_place'),
         func.count(case(
             (
                 Score.place_today == 4,
-                literal_column("'greaterthan4'")
+                literal_column("'equals4'")
             )
-        )).label('fourth_place')
+        )).label('fourth_place'),
+        case(
+            (
+                Score.match_day < match_day,
+                literal_column("'already_played'")
+            )
+        ).label('already_played'),
+        func.rank().over(
+            order_by=func.sum(Score.score_today).desc()
+        ).label('rank')
     ).join(
         Player.scores
     ).where(
@@ -93,7 +102,23 @@ def read_standings(match_day):
         func.sum(Score.score_today).desc()
     )
     results = db.session.execute(stmt).all()
-    return results
+
+    ranks_before = select(
+        Player,
+        func.rank().over(
+            order_by=func.sum(Score.score_today).desc()
+        ).label('rank_last_day')
+    ).join(
+        Player.scores
+    ).where(
+        Score.match_day < match_day
+    ).group_by(
+        Player.full_name
+    ).order_by(
+        func.sum(Score.score_today).desc()
+    )
+    ranks_before = db.session.execute(ranks_before).all()
+    return results, ranks_before
 
 
 def get_dyp_dates():
