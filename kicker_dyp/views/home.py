@@ -12,7 +12,7 @@ def index(match_day):
         match_days = get_last_match_day()
         if match_days:
             match_day = match_days
-    results = read_standings(match_day)
+    standings, ranks_before = read_standings(match_day)
     settings = get_settings()
     if settings:
         dyp_year = settings.dyp_year
@@ -24,7 +24,8 @@ def index(match_day):
         jackpot = calc_jackpot(match_day)
         dyp_dates = get_dyp_dates()
         return render_template('frontend_home.html',
-                               results=results,
+                               standings=standings,
+                               ranks_before=ranks_before,
                                dyp_year=dyp_year,
                                dyp_season=dyp_season,
                                dyp_start=dyp_start,
