@@ -178,15 +178,13 @@ WORKDIR /app
 COPY ./requirements.txt ./
 
 # create virtual environment
+USER root
 RUN python3 -m venv venv
 RUN . venv/bin/activate
 
 # install dependencies
 RUN pip install -r ./requirements.txt --upgrade pip
 
-# add and change user
-RUN groupadd -g 999 appuser && \
-    useradd -r -u 999 -g appuser appuser
 USER appuser
 
 # copy source code
