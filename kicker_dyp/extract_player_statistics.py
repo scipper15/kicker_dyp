@@ -1,3 +1,5 @@
+from flask import current_app as app
+
 import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -32,12 +34,13 @@ def generate_ranking(qualifying, players_elemination_ko_tree_1, players_eleminat
     ranking = []
     points = 10.0
     # 2 elemination trees means lower placement for players in 2nd elemination tree: means + max_rank_1
-    players_elemination_ko_tree_2 = [{
-        'name': player['name'],
-        'rank': player['rank'] + max_rank_1,
-        'club': player['club'],
-        'registration_nr': player['registration_nr']
-    } for player in players_elemination_ko_tree_2]
+    if players_elemination_ko_tree_2:
+        players_elemination_ko_tree_2 = [{
+            'name': player['name'],
+            'rank': player['rank'] + max_rank_1,
+            'club': player['club'],
+            'registration_nr': player['registration_nr']
+        } for player in players_elemination_ko_tree_2]
     # reverse list as we're calculating points starting at worst player position
     ko_tree = list(reversed(players_elemination_ko_tree_1 +
                             players_elemination_ko_tree_2))
@@ -83,14 +86,17 @@ def process_zip_file(zip_file):
 
     qualifying = extract_data_from_xml(xml_files[0])
     players_elemination_ko_tree_1 = extract_data_from_xml(xml_files[1])
-    players_elemination_ko_tree_2 = extract_data_from_xml(xml_files[2])
+    try:
+        players_elemination_ko_tree_2 = extract_data_from_xml(xml_files[2])
+    except IndexError:
+        players_elemination_ko_tree_2 = []
 
     players_total = len(players_elemination_ko_tree_1 +
                         players_elemination_ko_tree_2)
     max_rank_1 = max([player['rank']
                      for player in players_elemination_ko_tree_1])
     max_rank_2 = max([player['rank']
-                     for player in players_elemination_ko_tree_2])
+                     for player in players_elemination_ko_tree_2], default=0)  # 0 if only one elimination tree
     total_ranks = max_rank_1 + max_rank_2
     points_per_step = calculate_points_per_step(players_total, total_ranks)
 
