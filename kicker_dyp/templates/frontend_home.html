@@ -9,8 +9,8 @@
         <h1 class="title is-size-4 has-text-centered">Rangliste - Stand nach {{ match_day }} von {{ match_days }} Spieltagen</h1>
         <h2 class="subtitle is-size-5 has-text-centered">DYP-Serie {{ dyp_season }} vom {{ dyp_start|strftime_date() }} bis {{ dyp_end|strftime_date() }}</h2>
 
-        <section class="mb-3">
-            <p class="tag is-warning"><a href="#points">Ihr habt Fragen zur Punkteverteilung / Aufteilung Profifeld / Amateurfeld?</a></p>
+        <section class="notification is-info is-light mb-3">
+            <p><a href="#points">Ihr habt Fragen zur Punkteverteilung / Aufteilung Profifeld / Amateurfeld?</a></p>
         </section>
 
         {% if match_days %}
