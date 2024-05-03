@@ -9,10 +9,9 @@
         <h1 class="title is-size-4 has-text-centered">Rangliste - Stand nach {{ match_day }} von {{ match_days }} Spieltagen</h1>
         <h2 class="subtitle is-size-5 has-text-centered">DYP-Serie {{ dyp_season }} vom {{ dyp_start|strftime_date() }} bis {{ dyp_end|strftime_date() }}</h2>
 
-        <section>
+        <section class="mb-1">
             <div class="notification is-primary">
-                <p><a href="#points">Fragen zur Punkteverteilung?</a></p>
-                <p><a href="#pro-amateur">Fragen zur Aufteilung Profi- / Amateurfeld?</a></p>
+                <p><a href="#points">Fragen zur Punkteverteilung / Aufteilung Profifeld / Amateurfeld??</a></p>
             </div>
         </section>
 
@@ -117,7 +116,7 @@
             </ul>
         </ul>
     </div>
-    <div class="box content is-small" id="pro-amateur">
+    <div class="box content is-small">
         <p><strong>Aufteilung Profifeld / Amateurfeld:</strong></p>
         <ul>
             <li>8-11 Teilnehmer: 4 Profifeld, Rest (4-7) Amateurfeld</li>
