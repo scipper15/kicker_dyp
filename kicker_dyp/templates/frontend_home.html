@@ -32,6 +32,12 @@
                     </div>
             </div>
         </section>
+        <section>
+            <p>
+                <a href="#points"><span>Fragen zur Punkteverteilung?</span></a>
+                <a href="#pro-amateur"><span>Fragen zur Aufteilung Profifeld / Amateurfeld?</span></a>
+            </p>
+        </section>
         {% endif %}
 
         <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
@@ -93,7 +99,7 @@
         <span class="tag is-primary">Jackpot: {{ jackpot }} €</span>
     </div>
 
-    <div class="box content is-small">
+    <div class="box content is-small" id="points">
         <p><strong>Punktevergabe:</strong></p>
         <ul>
             <li>Punkte werden dynamisch errechnet, wobei die maximale Punktzahl von der Gesamtanzahl der Teilnehmer abhängt.</li>
@@ -112,7 +118,7 @@
         </ul>
     </div>
     <div class="box content is-small" id="pro-amateur">
-        <p><strong>Aufteilung Profifeld / Amateurfeld</strong></p>
+        <p><strong>Aufteilung Profifeld / Amateurfeld:</strong></p>
         <ul>
             <li>8-11 Teilnehmer: 4 Profifeld, Rest (4-7) Amateurfeld</li>
             <li>12-19: 8 Profifeld, Rest (4-11) Amateurfeld</li>
