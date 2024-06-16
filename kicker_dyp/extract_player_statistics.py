@@ -1,11 +1,20 @@
 from flask import current_app as app
+import werkzeug
+from kicker_dyp.config import Config
 
+import typing
 import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from pathlib import Path
+
+if typing.TYPE_CHECKING:
+    import werkzeug.datastructures.file_storage
 
 
-def retrieve_xml_files_from_zip(zip_file_path):
+def retrieve_xml_files_from_zip(
+        zip_file_path: werkzeug.datastructures.file_storage.FileStorage
+    ) -> list[zipfile.ZipExtFile]:
     with zipfile.ZipFile(zip_file_path) as z:
         return [z.open(filename) for filename in z.infolist() if not filename.is_dir()]
 
@@ -81,15 +90,22 @@ def extract_date_from_filename(filename):
     return date_obj
 
 
+def assign_tree_names(xml_files: list[zipfile.ZipExtFile]):
+    filename_dict = dict()
+    for zip_ext_file in xml_files:
+        filename: str = Path(zip_ext_file.name).name
+        filename_dict[filename] = zip_ext_file
+    return filename_dict
+
+
 def process_zip_file(zip_file):
     xml_files = retrieve_xml_files_from_zip(zip_file)
+    filename_dict = assign_tree_names(xml_files)
 
-    qualifying = extract_data_from_xml(xml_files[0])
-    players_elemination_ko_tree_1 = extract_data_from_xml(xml_files[1])
-    try:
-        players_elemination_ko_tree_2 = extract_data_from_xml(xml_files[2])
-    except IndexError:
-        players_elemination_ko_tree_2 = []
+    qualifying = extract_data_from_xml(filename_dict[Config.QUALIFYING_FILENAME])
+    players_elemination_ko_tree_1 = extract_data_from_xml(filename_dict[Config.TREE_1_FILENAME])
+    # n.b.: in case the second elemination tree doesn't exist return an empty list
+    players_elemination_ko_tree_2 = filename_dict.get(filename_dict[Config.TREE_2_FILENAME], [])
 
     players_total = len(players_elemination_ko_tree_1 +
                         players_elemination_ko_tree_2)

@@ -3,6 +3,9 @@ import os
 
 class Config:
     basedir = os.path.abspath(os.path.dirname(__file__))
+    QUALIFYING_FILENAME = 'qualifying-group-1.xml'
+    TREE_1_FILENAME = 'elimination-KO-Baum 1.xml'
+    TREE_2_FILENAME = 'elimination-KO-Baum 2.xml'
 
 
 class DevConfig(Config):
