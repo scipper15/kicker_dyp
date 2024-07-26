@@ -105,7 +105,7 @@ def process_zip_file(zip_file):
     qualifying = extract_data_from_xml(filename_dict[Config.QUALIFYING_FILENAME])
     players_elemination_ko_tree_1 = extract_data_from_xml(filename_dict[Config.TREE_1_FILENAME])
     # n.b.: in case the second elemination tree doesn't exist return an empty list
-    players_elemination_ko_tree_2 = filename_dict.get(filename_dict[Config.TREE_2_FILENAME], [])
+    players_elemination_ko_tree_2 = filename_dict.get(extract_data_from_xml(filename_dict[Config.TREE_2_FILENAME]), [])
 
     players_total = len(players_elemination_ko_tree_1 +
                         players_elemination_ko_tree_2)
