@@ -17,7 +17,12 @@ from kicker_dyp.database import save_settings
 load_dotenv()
 
 
-def create_app(config_name: str = 'dev') -> Flask:
+def create_app() -> Flask:
+    # use `.env` to set FLASK_CONFIG to 'dev', 'test' or 'prod'
+    # if environment doesn't have FLASK_CONFIG use 'dev' as default
+    config_name = os.getenv('FLASK_CONFIG', 'dev')
+    print(f'Running in {config_name}-mode.')
+
     app = Flask(__name__.split('.')[0], static_folder=None)
     app.static_folder = 'static'
     app.config.from_object(config[config_name])
@@ -28,7 +33,10 @@ def create_app(config_name: str = 'dev') -> Flask:
     except OSError:
         pass
 
-    # workaround: fixes static folder for subdomain
+    # Set the database URI to use the instance folder
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, f'{config_name}.db')
+
+    # workaround: fixes static folder when using a subdomain
     app.add_url_rule('/static/<path:filename>',
                      endpoint='static',
                      subdomain='dyp',
@@ -46,10 +54,11 @@ def create_app(config_name: str = 'dev') -> Flask:
     app.register_blueprint(auth_bp, url_prefix='/auth', subdomain='dyp')
     app.register_blueprint(admin_bp, url_prefix='/admin', subdomain='dyp')
 
+    # add cli commands
     app.cli.add_command(init_db_command)
     app.cli.add_command(create_standard_user_command)
 
-    # to test if development server works
+    # to test if development server runs
     @app.route('/test/', subdomain='dyp')
     def subdomain_test(subdomain='dyp'):
         return f'<p>Hello, World from {subdomain}-subdomain!</p>'
