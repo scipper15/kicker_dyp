@@ -179,24 +179,24 @@ def assign_tree_names(xml_files: list[zipfile.ZipExtFile]) -> dict[str, zipfile.
 
 def process_zip_file(zip_file):
     xml_files = retrieve_xml_files_from_zip(zip_file)
-    filename_dict = assign_tree_names(xml_files)
+    filestream_dict = assign_tree_names(xml_files)
 
-    qualifying = extract_data_from_xml(filename_dict[Config.QUALIFYING_FILENAME])
-    players_elimination_ko_tree_1 = extract_data_from_xml(filename_dict[Config.TREE_1_FILENAME])
+    qualifying = extract_data_from_xml(filestream_dict[Config.QUALIFYING_FILENAME])
+    players_elimination_ko_tree_1 = extract_data_from_xml(filestream_dict[Config.TREE_1_FILENAME])
     # n.b.: in case the second elemination tree doesn't exist return an empty list
-    players_elemination_ko_tree_2 = filename_dict.get(filename_dict[Config.TREE_2_FILENAME], [])
+    players_elimination_ko_tree_2 = extract_data_from_xml(filestream_dict.get(Config.TREE_2_FILENAME, []))
 
     players_total = len(players_elimination_ko_tree_1 +
-                        players_elemination_ko_tree_2)
+                        players_elimination_ko_tree_2)
     max_rank_1 = max([player['rank']
                      for player in players_elimination_ko_tree_1])
     max_rank_2 = max([player['rank']
-                     for player in players_elemination_ko_tree_2], default=0)  # 0 if only one elimination tree
+                     for player in players_elimination_ko_tree_2], default=0)  # 0 if only one elimination tree
     total_ranks = max_rank_1 + max_rank_2
     points_per_step = calculate_points_per_step(players_total, total_ranks)
 
     ranking = generate_ranking(
-        qualifying, players_elimination_ko_tree_1, players_elemination_ko_tree_2,
+        qualifying, players_elimination_ko_tree_1, players_elimination_ko_tree_2,
         points_per_step, max_rank_1
     )
     dyp_date_obj = extract_date_from_filename(zip_file.filename)
