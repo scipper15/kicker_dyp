@@ -34,7 +34,7 @@ def retrieve_xml_files_from_zip(
         zip_file_path: file object
 
     Returns:
-        list[IO[bytes]]: list of filestreams of the files inside the zip file
+        list[IO[bytes]]: filestreams of the files inside the zip file
     """
 
     with zipfile.ZipFile(zip_file_path) as z:
@@ -42,7 +42,7 @@ def retrieve_xml_files_from_zip(
 
 
 def extract_data_from_xml(xml_file: zipfile.ZipExtFile) -> list[KickertoolPlayerInfo]:
-    """Extracts data from xml
+    """Extracts dyp results from xml
 
     Args:
         xml_file: zip file object
@@ -99,6 +99,7 @@ def generate_ranking(
     Returns:
         unsorted list of 'name', rank, 'club', 'registration_nr', 'points'
     """
+
     ranking = []
     points = 10.0
     # 2 elimination trees means lower placement for players in 2nd elemination tree: means + max_rank_1
@@ -178,6 +179,22 @@ def assign_tree_names(xml_files: list[zipfile.ZipExtFile]) -> dict[str, zipfile.
 
 
 def process_zip_file(zip_file):
+    """Generates a ranking of all participating players
+
+    1. Gets list of filestreams from zip archive
+    2. Assigns an identifier for each filestream object
+    3. Extracts all xml trees: 1 qualifying and 2 elimination trees
+    4. n.b.: In some cases there is only 1 elimination tree
+    5. Counts total players, max_ranks, points_per_step
+    6. Extracts the date from the filename
+    7. Generates the ranking and returns it together with the date
+
+    Args:
+        zip_file (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     xml_files = retrieve_xml_files_from_zip(zip_file)
     filestream_dict = assign_tree_names(xml_files)
 
