@@ -5,7 +5,7 @@ from flask_login import login_user, logout_user, login_required
 from kicker_dyp.forms import RegistrationForm, LoginForm
 from kicker_dyp.models import User
 from kicker_dyp import db
-from kicker_dyp.database import get_settings
+from kicker_dyp.crud import get_settings
 
 auth_bp = Blueprint('auth', __name__)
 

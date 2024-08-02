@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash
 import roman
-from kicker_dyp.database import read_standings, get_settings, get_last_updated, get_last_match_day, calc_jackpot, get_dyp_dates
+from kicker_dyp.crud import read_standings, get_settings, get_last_updated, get_last_match_day, calc_jackpot, get_dyp_dates
 
 home_bp = Blueprint('home', __name__)
 

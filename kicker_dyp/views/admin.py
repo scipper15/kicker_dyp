@@ -4,7 +4,7 @@ from flask import (
 from flask_login import login_required
 from kicker_dyp.forms import UploadForm, SettingsForm, RevertForm
 from kicker_dyp.extract_player_statistics import process_zip_file
-from kicker_dyp.database import get_last_match_day, get_settings, revert_standings, save_settings, persist_data2db
+from kicker_dyp.crud import get_last_match_day, get_settings, revert_standings, save_settings, persist_data2db
 
 admin_bp = Blueprint('admin', __name__)
 

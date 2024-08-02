@@ -11,7 +11,7 @@ from kicker_dyp.models import User
 from kicker_dyp.views.home import home_bp
 from kicker_dyp.views.auth import auth_bp
 from kicker_dyp.views.admin import admin_bp
-from kicker_dyp.database import save_settings
+from kicker_dyp.crud import save_settings
 
 # Necessary for production: explicitely get environment variables
 load_dotenv()
