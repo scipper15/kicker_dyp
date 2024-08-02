@@ -190,8 +190,5 @@ USER appuser
 # copy source code
 COPY . ./
 
-# initialize database
-# RUN flask --app "kicker_dyp:create_app('prod')" init-db
-
 # expose port
 EXPOSE 8000
