@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField, validators, SubmitField, FileField, IntegerField, DateField, SelectField, form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from kicker_dyp.database import get_last_match_day
+from wtforms import (PasswordField, StringField, validators, SubmitField,
+                     FileField, IntegerField, DateField, SelectField)
 
 
 class RegistrationForm(FlaskForm):
@@ -35,15 +35,15 @@ class LoginForm(FlaskForm):
 
 class UploadForm(FlaskForm):
     zip_file = FileField('Upload ZIP File', validators=[
-                         FileRequired(), FileAllowed(['zip'], 'Only zip files, please.')])
+                         FileRequired(), FileAllowed(['zip'], 'Only ZIP files, please.')])
     submit = SubmitField('Upload')
 
 
 class SettingsForm(FlaskForm):
-    dyp_year = IntegerField('Dyp Series Year', [
+    dyp_year = IntegerField('DYP Series Year', [
         validators.InputRequired(),
     ])
-    dyp_season = IntegerField('Dyp Series Season', [
+    dyp_season = IntegerField('DYP Series Season', [
         validators.InputRequired(),
     ])
     dyp_start = DateField('Startdatum DYP', [
@@ -57,9 +57,9 @@ class SettingsForm(FlaskForm):
 
 class RevertForm(FlaskForm):
     match_day = SelectField(
-        'Everything Until including Dyp Match Day will be purged from database',
+        'Everything until including DYP Match Day will be purged from database',
         [validators.InputRequired()],
         coerce=int
     )
     submit = SubmitField(
-        'Click to revert database now! This is NOT reversable!')
+        'Click to revert database now! This is NOT reversible!')
