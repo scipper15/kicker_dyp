@@ -7,11 +7,7 @@ import typing
 import zipfile
 import xml.etree.ElementTree as ET
 
-import werkzeug
-
-
-if typing.TYPE_CHECKING:
-    from werkzeug.datastructures.file_storage import FileStorage
+from werkzeug.datastructures import FileStorage
 
 
 class KickertoolPlayerInfo(typing.TypedDict):
@@ -25,32 +21,50 @@ class RankingPlayerInfo(KickertoolPlayerInfo):
     points: float
 
 
-def read_zip_members(
-    zip_file: FileStorage,
-) -> dict[str, bytes]:
+XML_ROLE_QUALIFYING = "qualifying"
+XML_ROLE_PRO = "pro"
+XML_ROLE_AMATEUR = "amateur"
+
+DUMMY_PLAYERS = {"Bruce Lee", "Chuck Norris"}
+
+FILENAME_ROLE_MAP: dict[str, str] = {
+    # Altes Format
+    "qualifying-group-1.xml": XML_ROLE_QUALIFYING,
+    "elimination-ko-baum 1.xml": XML_ROLE_PRO,
+    "elimination-ko-baum 2.xml": XML_ROLE_AMATEUR,
+    # Neues Format
+    "vorrunde.xml": XML_ROLE_QUALIFYING,
+    "ko_runde_profi.xml": XML_ROLE_PRO,
+    "ko_runde_amateur.xml": XML_ROLE_AMATEUR,
+}
+
+
+def read_zip_members(zip_file: FileStorage) -> dict[str, bytes]:
     """
-    Liest alle Dateien aus dem ZIP und liefert ein Dict:
-    {basename -> file_bytes}
+    Read all files from the uploaded ZIP archive.
+
+    Returns:
+        Mapping of basename -> file content as bytes.
     """
     zip_file.stream.seek(0)
 
     with zipfile.ZipFile(zip_file.stream) as archive:
-        files: dict[str, bytes] = {}
+        result: dict[str, bytes] = {}
 
         for info in archive.infolist():
             if info.is_dir():
                 continue
 
             basename = Path(info.filename).name
-            files[basename] = archive.read(info.filename)
+            result[basename] = archive.read(info.filename)
 
-    return files
+    return result
 
 
-def get_xml_files(
-    files: dict[str, bytes],
-) -> dict[str, bytes]:
-    """Filtert XML-Dateien aus einem Dateidict."""
+def get_xml_files(files: dict[str, bytes]) -> dict[str, bytes]:
+    """
+    Filter XML files from a file mapping.
+    """
     return {
         filename: content
         for filename, content in files.items()
@@ -58,32 +72,23 @@ def get_xml_files(
     }
 
 
-def detect_xml_role(
-    filename: str,
-    xml_content: bytes,
-) -> str | None:
+def detect_xml_role(filename: str, xml_content: bytes) -> str | None:
     """
-    Erkennt die Rolle einer XML-Datei.
+    Detect the semantic role of an XML file.
 
-    Rückgabe:
-        - 'qualifying'
-        - 'pro'
-        - 'amateur'
-        - None
+    Supported roles:
+        - qualifying
+        - pro
+        - amateur
+
+    Detection strategy:
+        1. Known filename aliases for old/new export formats
+        2. Fallback: inspect XML metadata
     """
-    filename_lower = filename.lower()
+    normalized_name = filename.strip().lower()
 
-    filename_aliases = {
-        "qualifying-group-1.xml": "qualifying",
-        "vorrunde.xml": "qualifying",
-        "elimination-ko-baum 1.xml": "pro",
-        "ko_runde_profi.xml": "pro",
-        "elimination-ko-baum 2.xml": "amateur",
-        "ko_runde_amateur.xml": "amateur",
-    }
-
-    if filename_lower in filename_aliases:
-        return filename_aliases[filename_lower]
+    if normalized_name in FILENAME_ROLE_MAP:
+        return FILENAME_ROLE_MAP[normalized_name]
 
     root = ET.fromstring(xml_content)
 
@@ -94,23 +99,27 @@ def detect_xml_role(
     disziplin_name = (disziplin.get("name") or "").strip().lower()
 
     if "vorrunde" in disziplin_name or "qualifying" in disziplin_name:
-        return "qualifying"
+        return XML_ROLE_QUALIFYING
 
-    if "profi" in disziplin_name or "pro" in disziplin_name:
-        return "pro"
+    if "profi" in disziplin_name:
+        return XML_ROLE_PRO
 
     if "amateur" in disziplin_name:
-        return "amateur"
+        return XML_ROLE_AMATEUR
 
     return None
 
 
-def assign_xml_files(
-    xml_files: dict[str, bytes],
-) -> dict[str, bytes]:
+def assign_xml_files(xml_files: dict[str, bytes]) -> dict[str, bytes]:
     """
-    Ordnet XML-Dateien ihren Rollen zu.
-    qualifying und pro sind Pflicht, amateur ist optional.
+    Assign XML files to their logical roles.
+
+    Required:
+        - qualifying
+        - pro
+
+    Optional:
+        - amateur
     """
     assigned: dict[str, bytes] = {}
 
@@ -118,32 +127,29 @@ def assign_xml_files(
         role = detect_xml_role(filename, xml_content)
         if role is None:
             continue
+
         assigned[role] = xml_content
 
-    missing = {"qualifying", "pro"} - set(assigned.keys())
-    if missing:
-        missing_str = ", ".join(sorted(missing))
+    missing_roles = {XML_ROLE_QUALIFYING, XML_ROLE_PRO} - set(assigned.keys())
+    if missing_roles:
+        missing = ", ".join(sorted(missing_roles))
         raise ValueError(
-            f"ZIP konnte nicht verarbeitet werden. Fehlende XML-Rolle(n): {missing_str}"
+            f"ZIP konnte nicht verarbeitet werden. Fehlende XML-Rolle(n): {missing}"
         )
 
     return assigned
 
 
-def parse_players_from_xml(
-    xml_content: bytes,
-) -> list[KickertoolPlayerInfo]:
+def parse_players_from_xml(xml_content: bytes) -> list[KickertoolPlayerInfo]:
     """
-    Extrahiert Spieler aus einer XML-Datei.
+    Parse all players from a ranking XML.
 
-    Wichtig:
-    - In der Vorrunde enthält eine <meldung> typischerweise genau 1 <spieler>.
-    - In KO-Runden enthält eine <meldung> typischerweise 2 <spieler>.
-
-    Deshalb wird pro Meldung über alle enthaltenen Spieler iteriert.
+    Important:
+        A <meldung> may contain multiple <spieler> elements.
+        This is required for current KO exports and still works for the old format.
     """
     root = ET.fromstring(xml_content)
-    data: list[KickertoolPlayerInfo] = []
+    players: list[KickertoolPlayerInfo] = []
 
     for meldung in root.findall(".//meldung"):
         rank_raw = meldung.get("platz")
@@ -163,7 +169,7 @@ def parse_players_from_xml(
             club = (spieler.get("verein") or "").strip()
             registration_nr = (spieler.get("spielerpass") or "").strip()
 
-            data.append(
+            players.append(
                 {
                     "name": name,
                     "rank": rank,
@@ -172,31 +178,20 @@ def parse_players_from_xml(
                 }
             )
 
-    return data
-
-
-def calculate_points_per_step(
-    players_total: int,
-    total_ranks: int,
-) -> float:
-    """
-    Berechnet die Punktedifferenz pro besserem Rang.
-    """
-    if total_ranks <= 1:
-        return 0.0
-
-    return round(players_total / (total_ranks - 1), 2)
+    return players
 
 
 def shift_ranks(
     players: list[KickertoolPlayerInfo],
-    rank_offset: int,
+    offset: int,
 ) -> list[KickertoolPlayerInfo]:
-    """Verschiebt Ränge um einen Offset."""
+    """
+    Shift all player ranks by a fixed offset.
+    """
     return [
         {
             "name": player["name"],
-            "rank": player["rank"] + rank_offset,
+            "rank": player["rank"] + offset,
             "club": player["club"],
             "registration_nr": player["registration_nr"],
         }
@@ -204,22 +199,31 @@ def shift_ranks(
     ]
 
 
+def calculate_points_per_step(players_total: int, total_ranks: int) -> float:
+    """
+    Calculate the ranking point increment between rank groups.
+    """
+    if total_ranks <= 1:
+        return 0.0
+
+    return round(players_total / (total_ranks - 1), 2)
+
+
 def generate_ranking(
-    qualifying: list[KickertoolPlayerInfo],
+    qualifying_players: list[KickertoolPlayerInfo],
     pro_players: list[KickertoolPlayerInfo],
     amateur_players: list[KickertoolPlayerInfo],
     points_per_step: float,
     max_rank_pro: int,
 ) -> list[RankingPlayerInfo]:
     """
-    Erzeugt das Endranking.
+    Generate the final ranking.
 
-    Annahme wie im bisherigen Code:
-    - Profi-Baum vor Amateur-Baum
-    - Spieler, die nur in der Vorrunde waren, erhalten Teilnahmepunkte
+    Behaviour is intentionally aligned with the existing application logic:
+        - pro tree ranks before amateur tree ranks
+        - players only present in qualifying get participation points
     """
     ranking: list[RankingPlayerInfo] = []
-    points = 10.0
 
     adjusted_amateur_players = (
         shift_ranks(amateur_players, max_rank_pro)
@@ -229,6 +233,7 @@ def generate_ranking(
 
     ko_players = list(reversed(pro_players + adjusted_amateur_players))
 
+    points = 10.0
     for index, player in enumerate(ko_players):
         if index > 0 and ko_players[index - 1]["rank"] != player["rank"]:
             points += points_per_step
@@ -243,15 +248,14 @@ def generate_ranking(
             }
         )
 
-    max_rank = max((player["rank"] for player in ranking), default=0)
     ranking_names = {player["name"] for player in ranking}
-    dummy_players = {"Bruce Lee", "Chuck Norris"}
+    max_rank = max((player["rank"] for player in ranking), default=0)
 
-    for player in qualifying:
+    for player in qualifying_players:
         if player["name"] in ranking_names:
             continue
 
-        if player["name"] in dummy_players:
+        if player["name"] in DUMMY_PLAYERS:
             continue
 
         ranking.append(
@@ -267,16 +271,14 @@ def generate_ranking(
     return ranking
 
 
-def extract_date_from_filename(
-    filename: str,
-) -> datetime:
+def extract_date_from_filename(filename: str) -> datetime:
     """
-    Unterstützt altes und neues Dateinamensschema.
+    Extract tournament date from the ZIP filename.
 
-    Alt:
+    Supported old format:
         MDYP_26_03_26_12_export.zip
 
-    Neu:
+    Supported new format:
         2026-3-26 MDYP_12_export.zip
     """
     basename = Path(filename).name
@@ -297,8 +299,8 @@ def process_zip_file(
     zip_file: FileStorage,
 ) -> tuple[list[RankingPlayerInfo], datetime]:
     """
-    Verarbeitet das hochgeladene ZIP und erzeugt:
-        (ranking, dyp_date)
+    Process an uploaded ZIP file and return:
+        (ranking, tournament_date)
     """
     files = read_zip_members(zip_file)
     xml_files = get_xml_files(files)
@@ -306,32 +308,37 @@ def process_zip_file(
     if not xml_files:
         raise ValueError("ZIP enthält keine XML-Dateien.")
 
-    assigned = assign_xml_files(xml_files)
+    assigned_xml_files = assign_xml_files(xml_files)
 
-    qualifying = parse_players_from_xml(assigned["qualifying"])
-    pro_players = parse_players_from_xml(assigned["pro"])
-    amateur_players = (
-        parse_players_from_xml(assigned["amateur"])
-        if "amateur" in assigned
-        else []
+    qualifying_players = parse_players_from_xml(
+        assigned_xml_files[XML_ROLE_QUALIFYING]
     )
+    pro_players = parse_players_from_xml(assigned_xml_files[XML_ROLE_PRO])
+
+    amateur_players: list[KickertoolPlayerInfo] = []
+    if XML_ROLE_AMATEUR in assigned_xml_files:
+        amateur_players = parse_players_from_xml(
+            assigned_xml_files[XML_ROLE_AMATEUR]
+        )
 
     players_total = len(pro_players) + len(amateur_players)
-
     max_rank_pro = max((player["rank"] for player in pro_players), default=0)
-    max_rank_amateur = max((player["rank"] for player in amateur_players), default=0)
+    max_rank_amateur = max(
+        (player["rank"] for player in amateur_players),
+        default=0,
+    )
 
     total_ranks = max_rank_pro + max_rank_amateur
     points_per_step = calculate_points_per_step(players_total, total_ranks)
 
     ranking = generate_ranking(
-        qualifying=qualifying,
+        qualifying_players=qualifying_players,
         pro_players=pro_players,
         amateur_players=amateur_players,
         points_per_step=points_per_step,
         max_rank_pro=max_rank_pro,
     )
 
-    dyp_date = extract_date_from_filename(zip_file.filename or "")
+    tournament_date = extract_date_from_filename(zip_file.filename or "")
 
-    return ranking, dyp_date
+    return ranking, tournament_date
