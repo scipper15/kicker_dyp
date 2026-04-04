@@ -1,6 +1,8 @@
 from datetime import datetime
+
 from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from kicker_dyp import db
 
 
@@ -25,12 +27,11 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password, password)
 
 
-players_scores = db.Table('players_scores',
-                          db.Column('player_id', db.Integer, db.ForeignKey(
-                              'player.id'), primary_key=True),
-                          db.Column('score_id', db.Integer, db.ForeignKey(
-                              'score.id'), primary_key=True)
-                          )
+players_scores = db.Table(
+    "players_scores",
+    db.Column("player_id", db.Integer, db.ForeignKey("player.id"), primary_key=True),
+    db.Column("score_id", db.Integer, db.ForeignKey("score.id"), primary_key=True),
+)
 
 
 class Player(db.Model):
@@ -39,13 +40,12 @@ class Player(db.Model):
     club = db.Column(db.String(100))
     registration_nr = db.Column(db.String(8))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
+
     scores = db.relationship(
-        'Score',
+        "Score",
         secondary=players_scores,
-        backref=db.backref(
-            'players',
-            lazy='dynamic',
-        ))
+        backref=db.backref("players", lazy="dynamic"),
+    )
 
 
 class Score(db.Model):
@@ -53,5 +53,9 @@ class Score(db.Model):
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     dyp_date = db.Column(db.DateTime, nullable=False)
     match_day = db.Column(db.Integer, nullable=False)
+
     score_today = db.Column(db.Integer, nullable=False)
     place_today = db.Column(db.Integer, nullable=False)
+
+    field_type = db.Column(db.String(20), nullable=False, default="qualifying")
+    place_pro_today = db.Column(db.Integer, nullable=True)

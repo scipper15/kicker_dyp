@@ -31,93 +31,120 @@ def save_settings(dyp_year, dyp_season, dyp_start, dyp_end):
 def persist_data2db(dyp_results, dyp_date, match_day):
     for player in dyp_results:
         player_obj = db.session.query(Player).filter_by(
-            full_name=player['name']).one_or_none()
+            full_name=player["name"]
+        ).one_or_none()
+
         if not player_obj:
             player_obj = Player(
-                full_name=player['name'],
-                club=player['club'],
-                registration_nr=player['registration_nr']
+                full_name=player["name"],
+                club=player["club"],
+                registration_nr=player["registration_nr"],
             )
         else:
-            # always update those: they might change over time
-            player_obj.club = player['club']
-            player_obj.registration_nr = player['registration_nr']
+            player_obj.club = player["club"]
+            player_obj.registration_nr = player["registration_nr"]
 
-        scores = Score(
+        score = Score(
             dyp_date=dyp_date,
             match_day=match_day,
-            score_today=player['points'],
-            place_today=player['rank']
+            score_today=player["points"],
+            place_today=player["rank"],
+            field_type=player["field_type"],
+            place_pro_today=player["place_pro_today"],
         )
-        player_obj.scores.append(scores)
+
+        player_obj.scores.append(score)
         db.session.add(player_obj)
-        db.session.add(scores)
-        db.session.commit()
+        db.session.add(score)
+
+    db.session.commit()
+
+
+from sqlalchemy import case, func, literal_column, select
+
+from kicker_dyp import db
+from kicker_dyp.models import Player, Score
+
+
+def persist_data2db(dyp_results, dyp_date, match_day):
+    for player in dyp_results:
+        player_obj = db.session.query(Player).filter_by(
+            full_name=player["name"]
+        ).one_or_none()
+
+        if not player_obj:
+            player_obj = Player(
+                full_name=player["name"],
+                club=player["club"],
+                registration_nr=player["registration_nr"],
+            )
+        else:
+            player_obj.club = player["club"]
+            player_obj.registration_nr = player["registration_nr"]
+
+        score = Score(
+            dyp_date=dyp_date,
+            match_day=match_day,
+            score_today=player["points"],
+            place_today=player["rank"],
+            field_type=player["field_type"],
+            place_pro_today=player["place_pro_today"],
+        )
+
+        player_obj.scores.append(score)
+        db.session.add(player_obj)
+        db.session.add(score)
+
+    db.session.commit()
 
 
 def read_standings(match_day):
-    stmt = select(
-        Player, Score,
-        func.sum(Score.score_today).label('points_total'),
-        func.count(Score.score_today).label('attendances'),
-        func.count(case(
-            (
-                Score.place_today == 1,
-                literal_column("'equals1'")
-            )
-        )).label('first_place'),
-        func.count(case(
-            (
-                Score.place_today == 2,
-                literal_column("'equals2'")
-            )
-        )).label('second_place'),
-        func.count(case(
-            (
-                Score.place_today == 3,
-                literal_column("'equals3'")
-            )
-        )).label('third_place'),
-        func.count(case(
-            (
-                Score.place_today == 4,
-                literal_column("'equals4'")
-            )
-        )).label('fourth_place'),
-        case(
-            (
-                Score.match_day < match_day,
-                literal_column("'already_played'")
-            )
-        ).label('already_played'),
-        func.rank().over(
-            order_by=func.sum(Score.score_today).desc()
-        ).label('rank')
-    ).join(
-        Player.scores
-    ).where(
-        Score.match_day <= match_day
-    ).group_by(
-        Player.full_name
-    ).order_by(
-        func.sum(Score.score_today).desc()
+    stmt = (
+        select(
+            Player,
+            Score,
+            func.sum(Score.score_today).label("points_total"),
+            func.count(Score.score_today).label("attendances"),
+            func.count(
+                case((Score.place_pro_today == 1, literal_column("'equals1'")))
+            ).label("first_place"),
+            func.count(
+                case((Score.place_pro_today == 2, literal_column("'equals2'")))
+            ).label("second_place"),
+            func.count(
+                case((Score.place_pro_today == 3, literal_column("'equals3'")))
+            ).label("third_place"),
+            func.count(
+                case((Score.place_pro_today == 4, literal_column("'equals4'")))
+            ).label("fourth_place"),
+            case(
+                (Score.match_day < match_day, literal_column("'already_played'"))
+            ).label("already_played"),
+            func.rank().over(
+                order_by=func.sum(Score.score_today).desc()
+            ).label("rank"),
+        )
+        .join(Player.scores)
+        .where(Score.match_day <= match_day)
+        .group_by(Player.full_name)
+        .order_by(func.sum(Score.score_today).desc())
     )
+
     results = db.session.execute(stmt).all()
 
-    ranks_before = select(
-        Player,
-        func.rank().over(
-            order_by=func.sum(Score.score_today).desc()
-        ).label('rank_last_day')
-    ).join(
-        Player.scores
-    ).where(
-        Score.match_day < match_day
-    ).group_by(
-        Player.full_name
-    ).order_by(
-        func.sum(Score.score_today).desc()
+    ranks_before = (
+        select(
+            Player,
+            func.rank().over(
+                order_by=func.sum(Score.score_today).desc()
+            ).label("rank_last_day"),
+        )
+        .join(Player.scores)
+        .where(Score.match_day < match_day)
+        .group_by(Player.full_name)
+        .order_by(func.sum(Score.score_today).desc())
     )
+
     ranks_before = db.session.execute(ranks_before).all()
     return results, ranks_before
 
