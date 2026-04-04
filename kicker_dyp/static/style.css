@@ -1,12 +1,143 @@
 .qualified {
-    background-color: #e7fce7;
+    background-color: #e7fce7 !important;
+    font-weight: 700;
+    box-shadow: inset 0 0 0 1px #b7e3b7;
 }
-#ranking th {
+
+.ranking-page {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+.ranking-intro {
+    margin-bottom: 1.25rem;
+}
+
+.ranking-footer {
+    margin-top: 1.75rem;
+}
+
+.ranking-table-shell {
+    position: relative;
+}
+
+.ranking-header-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    background-color: #fff;
+}
+
+.ranking-header-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+#ranking-header,
+#ranking {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+#ranking-header th,
+#ranking th,
+#ranking td {
+    white-space: nowrap;
+}
+
+#ranking-header thead th {
     background-color: #808080;
-    color: #fff
+    color: #fff;
+    cursor: pointer;
+}
+
+#ranking-header th.sort-asc::after {
+    content: " ▲";
+}
+
+#ranking-header th.sort-desc::after {
+    content: " ▼";
+}
+
+#ranking thead.sr-only {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+
+#ranking thead.sr-only th {
+    padding-top: 0;
+    padding-bottom: 0;
+    border: 0;
+    height: 0;
+    line-height: 0;
+}
+
+.name-cell {
+    min-width: 10rem;
+}
+
+.player-name {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2rem;
+}
+
+.player-name .last-name::after {
+    content: ",";
+}
+
+@media screen and (max-width: 768px) {
+    .ranking-page {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .name-cell {
+        min-width: 7rem;
+    }
+
+    .player-name {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.05;
+        gap: 0;
+    }
+
+    .player-name .last-name::after {
+        content: "";
+    }
+
+    .player-name .first-name {
+        font-size: 0.9em;
+    }
 }
 
 @media screen and (max-width: 480px) {
-	#ranking th, #ranking td {padding: 0.2em 0.1em;}
-	#ranking th {writing-mode: vertical-lr;vertical-align: bottom;}
+    #ranking-header th,
+    #ranking th,
+    #ranking td {
+        padding: 0.2em 0.1em;
+    }
+
+    #ranking-header th {
+        writing-mode: vertical-lr;
+        vertical-align: bottom;
+    }
+
+    .ranking-page {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
 }

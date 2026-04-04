@@ -37,6 +37,7 @@
         </div>
     </nav>
     {% endif %}
+
     <div class="container is-max-desktop">
         <section>
             {% with messages = get_flashed_messages() %}
@@ -49,9 +50,12 @@
                 {% endif %}
             {% endwith %}
         </section>
+
         <section>
             {% block content %}{% endblock %}
         </section>
     </div>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

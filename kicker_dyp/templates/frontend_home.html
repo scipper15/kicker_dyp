@@ -3,126 +3,384 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section ranking-page">
     <div class="container">
+        <div class="ranking-intro">
+            <h1 class="title is-size-4 has-text-centered">
+                Rangliste - Stand nach {{ match_day }} von {{ match_days }} Spieltagen
+            </h1>
 
-        <h1 class="title is-size-4 has-text-centered">Rangliste - Stand nach {{ match_day }} von {{ match_days }} Spieltagen</h1>
-        <h2 class="subtitle is-size-5 has-text-centered">DYP-Serie {{ dyp_season }} vom {{ dyp_start|strftime_date() }} bis {{ dyp_end|strftime_date() }}</h2>
+            <h2 class="subtitle is-size-5 has-text-centered">
+                DYP-Serie {{ dyp_season }} vom {{ dyp_start|strftime_date() }} bis {{ dyp_end|strftime_date() }}
+            </h2>
 
-        <section class="notification is-info is-light mb-3">
-            <p><a href="#points">Ihr habt Fragen zur Punkteverteilung / Aufteilung Profifeld / Amateurfeld?</a></p>
-        </section>
+            <section class="notification is-info is-light mb-4">
+                <p>
+                    <a href="#points">
+                        Ihr habt Fragen zur Punkteverteilung / Aufteilung Profifeld / Amateurfeld?
+                    </a>
+                </p>
+            </section>
 
-        {% if match_days %}
-        <section>
-            <div class="mb-3 dropdown is-hoverable">
-                <div class="dropdown-trigger">
-                <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
-                    <span>Spieltag wählen</span>
-                    <span class="icon is-small">
-                    <i class="fas fa-angle-down" aria-hidden="true"></i>
-                    </span>
-                </button>
-                </div>
-                <div class="dropdown-menu" id="dropdown-menu4" role="menu">
-                    <div class="dropdown-content">
+            {% if match_days %}
+            <section class="mb-4">
+                <div class="dropdown is-hoverable">
+                    <div class="dropdown-trigger">
+                        <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
+                            <span>Spieltag wählen</span>
+                            <span class="icon is-small">
+                                <i class="fas fa-angle-down" aria-hidden="true"></i>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+                        <div class="dropdown-content">
                             {% for _, dyp_date in zip(range(match_days), dyp_dates) %}
                             <div class="dropdown-item">
-                                <a href="{{ url_for('home.index', match_day=loop.index) }}"><p>Stand nach Spieltag {{ loop.index }} ({{ dyp_date[0]|strftime_date }})</p></a>
+                                <a href="{{ url_for('home.index', match_day=loop.index) }}">
+                                    <p>Stand nach Spieltag {{ loop.index }} ({{ dyp_date[0]|strftime_date }})</p>
+                                </a>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
+                </div>
+            </section>
+            {% endif %}
+        </div>
+
+        <div class="ranking-table-shell mb-5">
+            <div class="ranking-header-wrapper" id="ranking-header-wrapper">
+                <table id="ranking-header" class="table is-bordered is-narrow is-fullwidth">
+                    <thead>
+                        <tr class="is-size-7">
+                            <th class="has-text-centered" data-sort-type="int">Platz</th>
+                            <th data-sort-type="text">Name</th>
+                            <th class="has-text-centered" data-sort-type="int">Teilnahmen</th>
+                            <th class="has-text-centered" data-sort-type="float">Punkte</th>
+                            <th class="has-text-centered" data-sort-type="text">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </th>
+                            <th class="has-text-centered" data-sort-type="float">Ø</th>
+                            <th class="has-text-centered" data-sort-type="int">1.</th>
+                            <th class="has-text-centered" data-sort-type="int">2.</th>
+                            <th class="has-text-centered" data-sort-type="int">3.</th>
+                            <th class="has-text-centered" data-sort-type="int">4.</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
-        </section>
-        {% endif %}
 
-        <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-            <thead>
-            <tr class="is-size-7">
-                <th class="has-text-centered">Platz</th>
-                <th>Name</th>
-                <th class="has-text-centered">Teilnahmen</th>
-                <th class="has-text-centered">Punkte</th>
-                <th class="has-text-centered"><i class="fa-solid fa-chart-line"></i></th>
-                <th class="has-text-centered">Ø</th>
-                <th class="has-text-centered">1.</th>
-                <th class="has-text-centered">2.</th>
-                <th class="has-text-centered">3.</th>
-                <th class="has-text-centered">4.</th>
-            </tr>
-            </thead>
-            <tbody>
-                {% for standing in standings %}
-                <tr class="is-size-7">
-                    {% if standing.rank <= 16 %}
-                        <td class="has-text-centered qualified">{{ standing.rank }}</td>
-                    {% else %}
-                        <td class="has-text-centered">{{ standing.rank }}</td>
-                    {% endif %}
-                    <td>{{ standing.Player.full_name }}</td>
-                    <td class="has-text-centered">{{ standing.attendances }}</td>
-                    <td class="has-text-centered">{{ '%.2f' | format(standing.points_total|float)|replace('.', ',') }}</td>
-                    {% set average = standing.points_total / standing.attendances %}
-                    {% if standing.already_played %}
-                        {% for rank_before in ranks_before %}
-                            {% if rank_before.Player.id == standing.Player.id %}
-                                {% if rank_before.rank_last_day > standing.rank %}
-                                    <td class="has-text-centered"><i class="fa-solid fa-arrow-trend-up"></i></td>
-                                {% elif rank_before.rank_last_day < standing.rank %}
-                                    <td class="has-text-centered"><i class="fa-solid fa-arrow-trend-down"></i></td>
-                                {% elif rank_before.rank_last_day == standing.rank %}
-                                    <td class="has-text-centered"><i class="fa-solid fa-plus-minus"></i></td>
-                                {% endif %}
+            <div class="table-wrapper" id="ranking-body-wrapper">
+                <table id="ranking" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                    <thead class="sr-only">
+                        <tr class="is-size-7">
+                            <th class="has-text-centered">Platz</th>
+                            <th>Name</th>
+                            <th class="has-text-centered">Teilnahmen</th>
+                            <th class="has-text-centered">Punkte</th>
+                            <th class="has-text-centered">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </th>
+                            <th class="has-text-centered">Ø</th>
+                            <th class="has-text-centered">1.</th>
+                            <th class="has-text-centered">2.</th>
+                            <th class="has-text-centered">3.</th>
+                            <th class="has-text-centered">4.</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for standing in standings %}
+                        {% set average = standing.points_total / standing.attendances %}
+                        {% set name_parts = standing.Player.full_name.split(', ') %}
+
+                        <tr class="is-size-7">
+                            {% if loop.index <= 16 %}
+                            <td class="has-text-centered qualified" data-sort="{{ standing.rank }}">
+                                {{ standing.rank }}
+                            </td>
+                            {% else %}
+                            <td class="has-text-centered" data-sort="{{ standing.rank }}">
+                                {{ standing.rank }}
+                            </td>
                             {% endif %}
+
+                            <td data-sort="{{ standing.Player.full_name }}" class="name-cell">
+                                <span class="player-name">
+                                    <span class="last-name">{{ name_parts[0] }}</span>
+                                    {% if name_parts|length > 1 %}
+                                    <span class="first-name">{{ name_parts[1] }}</span>
+                                    {% endif %}
+                                </span>
+                            </td>
+
+                            <td class="has-text-centered" data-sort="{{ standing.attendances }}">
+                                {{ standing.attendances }}
+                            </td>
+
+                            <td class="has-text-centered" data-sort="{{ '%.2f' | format(standing.points_total|float) }}">
+                                {{ '%.2f' | format(standing.points_total|float)|replace('.', ',') }}
+                            </td>
+
+                            {% if standing.already_played %}
+                                {% set ns = namespace(found=false) %}
+                                {% for rank_before in ranks_before %}
+                                    {% if rank_before.Player.id == standing.Player.id %}
+                                        {% set ns.found = true %}
+                                        {% if rank_before.rank_last_day > standing.rank %}
+                                        <td class="has-text-centered" data-sort="up">
+                                            <i class="fa-solid fa-arrow-trend-up"></i>
+                                        </td>
+                                        {% elif rank_before.rank_last_day < standing.rank %}
+                                        <td class="has-text-centered" data-sort="down">
+                                            <i class="fa-solid fa-arrow-trend-down"></i>
+                                        </td>
+                                        {% elif rank_before.rank_last_day == standing.rank %}
+                                        <td class="has-text-centered" data-sort="same">
+                                            <i class="fa-solid fa-plus-minus"></i>
+                                        </td>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not ns.found %}
+                                <td class="has-text-centered" data-sort="new">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                </td>
+                                {% endif %}
+                            {% else %}
+                            <td class="has-text-centered" data-sort="new">
+                                <i class="fa-solid fa-user-plus"></i>
+                            </td>
+                            {% endif %}
+
+                            <td class="has-text-centered" data-sort="{{ '%.2f' | format(average|float) }}">
+                                {{ '%.2f' | format(average|float)|replace('.', ',') }}
+                            </td>
+
+                            <td class="has-text-centered" data-sort="{{ standing.first_place }}">
+                                {{ standing.first_place }}
+                            </td>
+                            <td class="has-text-centered" data-sort="{{ standing.second_place }}">
+                                {{ standing.second_place }}
+                            </td>
+                            <td class="has-text-centered" data-sort="{{ standing.third_place }}">
+                                {{ standing.third_place }}
+                            </td>
+                            <td class="has-text-centered" data-sort="{{ standing.fourth_place }}">
+                                {{ standing.fourth_place }}
+                            </td>
+                        </tr>
                         {% endfor %}
-                    {% else %}
-                        <td class="has-text-centered"><i class="fa-solid fa-user-plus"></i></td>
-                    {% endif %}
-                    <td class="has-text-centered">{{ '%.2f' | format(average|float)|replace('.', ',') }}</td>
-                    <td class="has-text-centered">{{ standing.first_place }}</td>
-                    <td class="has-text-centered">{{ standing.second_place }}</td>
-                    <td class="has-text-centered">{{ standing.third_place }}</td>
-                    <td class="has-text-centered">{{ standing.fourth_place }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
+        <div class="ranking-footer">
+            <div class="box content columns has-text-centered is-size-7">
+                <span class="tag is-primary">Jackpot: {{ jackpot }} €</span>
+            </div>
+
+            <div class="box content is-small" id="points">
+                <p><strong>Punktevergabe:</strong></p>
+                <ul>
+                    <li>
+                        Punkte werden dynamisch errechnet, wobei die maximale Punktzahl
+                        von der Gesamtanzahl der Teilnehmer abhängt.
+                    </li>
+                    <li>
+                        Die beiden Erstplatzierten des Final-Profifeldes erhalten die
+                        maximale Punktzahl.
+                    </li>
+                    <li>
+                        Die Letztplatzierten des Final-Amateurfeldes sowie diejenigen,
+                        die nur an der Qualifizierungsrunde teilgenommen haben, erhalten
+                        jeweils 10 Punkte (für die Teilnahme).
+                    </li>
+                    <li>
+                        Die Punktedifferenz zwischen jeweils benachbarten Plätzen ist -
+                        <strong>innerhalb</strong> einer DYP-Veranstaltung - gleich.
+                        Gleichplatzierte erhalten je gleich viele Punkte.
+                    </li>
+                    <li>
+                        Jede bessere Platzierung erhält stufenweise mehr Punkte
+                        (10 + x Punkte).
+                    </li>
+                    <li><strong>Beispiel:</strong></li>
+                    <ul>
+                        <li>
+                            Bei 20 Teilnehmern ist die Punktstufe für jeden besseren
+                            Platz beispielsweise 2,44.
+                        </li>
+                        <li>Der Letztplatzierte erhält 10 Punkte für die Teilnahme.</li>
+                        <li>Der Vorletzte erhält 10 Punkte + 2,44 Punkte.</li>
+                        <li>Der Drittletzte erhält 12,44 Punkte + 2,44 Punkte. Etc.</li>
+                    </ul>
+                </ul>
+            </div>
+
+            <div class="box content is-small">
+                <p><strong>Aufteilung Profifeld / Amateurfeld:</strong></p>
+                <ul>
+                    <li>8-11 Teilnehmer: 4 Profifeld, Rest (4-7) Amateurfeld</li>
+                    <li>12-19: 8 Profifeld, Rest (4-11) Amateurfeld</li>
+                    <li>20-27: 12 Profifeld, Rest (8-15) Amateurfeld</li>
+                    <li>≥28: 16 Profifeld, Rest (12-∞) Amateurfeld</li>
+                </ul>
+            </div>
+
+            <p class="is-size-7 has-text-centered mt-4">
+                Stand: {{ last_updated|strftime_timestamp }}
+            </p>
+        </div>
     </div>
 </section>
-<section>
-    <div class="box content columns has-text-centered is-size-7">
-        <span class="tag is-primary">Jackpot: {{ jackpot }} €</span>
-    </div>
+{% endblock %}
 
-    <div class="box content is-small" id="points">
-        <p><strong>Punktevergabe:</strong></p>
-        <ul>
-            <li>Punkte werden dynamisch errechnet, wobei die maximale Punktzahl von der Gesamtanzahl der Teilnehmer abhängt.</li>
-            <li>Die beiden Erstplatzierten des Final-Profifeldes erhalten die maximale Punktzahl.</li>
-            <li>Die Letztplatzierten des Final-Amateurfeldes sowie diejenigen, die nur an der Qualifizierungsrunde teilgenommen haben, erhalten jeweils 10 Punkte (für die Teilnahme).</li>
-            <li>Die Punktedifferenz zwischen jeweils benachbarten Plätzen ist - <strong>innerhalb</strong> einer DYP-Veranstaltung - gleich. Gleichplatzierte erhalten je gleich viele Punkte.</li>
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const bodyTable = document.getElementById("ranking");
+    const headerTable = document.getElementById("ranking-header");
+    const bodyWrapper = document.getElementById("ranking-body-wrapper");
+    const headerWrapper = document.getElementById("ranking-header-wrapper");
 
-            <li>Jede bessere Platzierung erhält stufenweise mehr Punkte (10 + x Punkte).</li>
-            <li><strong>Beispiel: </strong></li>
-            <ul>
-                <li>Bei 20 Teilnehmern ist die Punktstufe für jeden besseren Platz beispielsweise 2,44.</li>
-                <li>Der Letztplatzierte erhält 10 Punkte für die Teilnahme.</li>
-                <li>Der Vorletzte erhält 10 Punkte + 2,44 Punkte.</li>
-                <li>Der Drittletzte erhält 12,44 Punkte + 2,44 Punkte. Etc.</li>
-            </ul>
-        </ul>
-    </div>
-    <div class="box content is-small">
-        <p><strong>Aufteilung Profifeld / Amateurfeld:</strong></p>
-        <ul>
-            <li>8-11 Teilnehmer: 4 Profifeld, Rest (4-7) Amateurfeld</li>
-            <li>12-19: 8 Profifeld, Rest (4-11) Amateurfeld</li>
-            <li>20-27: 12 Profifeld, Rest (8-15) Amateurfeld</li>
-            <li>≥28: 16 Profifeld, Rest (12-∞) Amateurfeld</li>
-        </ul>
-    </div>
-    <span class="tag is-white">Stand: {{ last_updated|strftime_timestamp }}</span>
-</section>
+    if (!bodyTable || !headerTable || !bodyWrapper || !headerWrapper) {
+        return;
+    }
+
+    const bodyHeaders = Array.from(bodyTable.querySelectorAll("thead th"));
+    const headerHeaders = Array.from(headerTable.querySelectorAll("thead th"));
+    const tbody = bodyTable.querySelector("tbody");
+
+    const trendOrder = {
+        up: 3,
+        same: 2,
+        new: 1,
+        down: 0
+    };
+
+    const parseValue = (value, type) => {
+        if (type === "int") {
+            return parseInt(value, 10) || 0;
+        }
+
+        if (type === "float") {
+            return parseFloat(String(value).replace(",", ".")) || 0;
+        }
+
+        if (type === "text") {
+            if (Object.prototype.hasOwnProperty.call(trendOrder, value)) {
+                return trendOrder[value];
+            }
+
+            return String(value).toLocaleLowerCase("de");
+        }
+
+        return String(value).toLocaleLowerCase("de");
+    };
+
+    const syncHeaderWidths = () => {
+        const firstBodyRow = bodyTable.querySelector("tbody tr");
+        if (!firstBodyRow) {
+            return;
+        }
+
+        const bodyCells = Array.from(firstBodyRow.children);
+
+        bodyCells.forEach((cell, index) => {
+            const width = Math.ceil(cell.getBoundingClientRect().width);
+            if (headerHeaders[index]) {
+                headerHeaders[index].style.width = `${width}px`;
+                headerHeaders[index].style.minWidth = `${width}px`;
+                headerHeaders[index].style.maxWidth = `${width}px`;
+            }
+        });
+
+        const bodyTableWidth = Math.ceil(bodyTable.getBoundingClientRect().width);
+        headerTable.style.width = `${bodyTableWidth}px`;
+        headerTable.style.minWidth = `${bodyTableWidth}px`;
+    };
+
+    let syncingFromBody = false;
+    let syncingFromHeader = false;
+
+    bodyWrapper.addEventListener("scroll", () => {
+        if (syncingFromHeader) {
+            syncingFromHeader = false;
+            return;
+        }
+
+        syncingFromBody = true;
+        headerWrapper.scrollLeft = bodyWrapper.scrollLeft;
+    });
+
+    headerWrapper.addEventListener("scroll", () => {
+        if (syncingFromBody) {
+            syncingFromBody = false;
+            return;
+        }
+
+        syncingFromHeader = true;
+        bodyWrapper.scrollLeft = headerWrapper.scrollLeft;
+    });
+
+    headerHeaders.forEach((header, columnIndex) => {
+        header.addEventListener("click", () => {
+            const currentDirection =
+                header.dataset.sortDirection === "asc" ? "asc" : "desc";
+            const nextDirection =
+                currentDirection === "asc" ? "desc" : "asc";
+            const sortType = header.dataset.sortType || "text";
+
+            headerHeaders.forEach((th) => {
+                th.classList.remove("sort-asc", "sort-desc");
+                if (th !== header) {
+                    th.dataset.sortDirection = "";
+                }
+            });
+
+            header.dataset.sortDirection = nextDirection;
+            header.classList.add(
+                nextDirection === "asc" ? "sort-asc" : "sort-desc"
+            );
+
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.children[columnIndex];
+                const cellB = rowB.children[columnIndex];
+
+                const rawA = cellA.dataset.sort ?? cellA.textContent.trim();
+                const rawB = cellB.dataset.sort ?? cellB.textContent.trim();
+
+                const valueA = parseValue(rawA, sortType);
+                const valueB = parseValue(rawB, sortType);
+
+                if (valueA < valueB) {
+                    return nextDirection === "asc" ? -1 : 1;
+                }
+
+                if (valueA > valueB) {
+                    return nextDirection === "asc" ? 1 : -1;
+                }
+
+                return 0;
+            });
+
+            tbody.replaceChildren(...rows);
+            window.requestAnimationFrame(syncHeaderWidths);
+        });
+    });
+
+    window.requestAnimationFrame(syncHeaderWidths);
+    window.addEventListener("resize", syncHeaderWidths);
+
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(syncHeaderWidths);
+    }
+});
+</script>
 {% endblock %}
